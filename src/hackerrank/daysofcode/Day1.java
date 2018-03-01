@@ -2,7 +2,7 @@ package hackerrank.daysofcode;
 
 import java.util.*;
 
-public class DataTypes {
+public class Day1 {
 
     public static void main(String[] args) {
         int i = 4;
