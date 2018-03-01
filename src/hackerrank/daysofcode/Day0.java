@@ -2,7 +2,7 @@ package hackerrank.daysofcode;
 
 import java.util.*;
 
-public class HelloWorld {
+public class Day0 {
     public static void main(String[] args) {
         // Create a Scanner object to read input from stdin.
         Scanner scan = new Scanner(System.in);
@@ -17,7 +17,7 @@ public class HelloWorld {
         // Print a string literal saying "Hello, World." to stdout.
         System.out.println("Hello, World.");
 
-        // Write a line of code here that prints the contents of inputString to stdout.
+        // TODO: Write a line of code here that prints the contents of inputString to stdout.
         System.out.println(inputString);
     }
 }
