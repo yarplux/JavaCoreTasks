@@ -2,6 +2,7 @@ package Hometasks.task180212;
 
 import java.util.*;
 import java.io.*;
+import static Hometasks.task180212.FileOperations.*;
 
 public class CopyMedia {
 
@@ -38,10 +39,10 @@ public class CopyMedia {
         }
 
             for (File tempFile : files) {
-                FileOperations.copyFile1(tempFile, new File("D:\\"));
+                copyFile1(tempFile, new File("D:\\"));
                 String name = tempFile.getName();
                 if (name.length() < 5 || !name.substring(name.length()-4).equals(".mp3")) {
-                    FileOperations.rename1(tempFile, tempFile.getName() + ".mp3");
+                    rename1(tempFile, tempFile.getName() + ".mp3");
                 }
             }
     }
