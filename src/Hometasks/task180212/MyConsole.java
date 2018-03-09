@@ -2,9 +2,10 @@ package Hometasks.task180212;
 
 import java.io.Console;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.*;
 import java.util.*;
+
+import Hometasks.task180126.GeksField;
 
 import static Hometasks.task180212.FileOperations.*;
 
@@ -23,18 +24,30 @@ public class MyConsole {
     private static final Map<String, Map<String, String>> COMMANDS = new HashMap<>();
 
     static {
-        String[] tempArrayOfCommands = {"help", "cls", "exit", "dir", "cd"};
+        String[] tempArrayOfCommands = {"help", "cls", "exit", "dir", "cd", "createGeksField", "printGeksFiels", "findMinPath"};
         String[][] tempArrayOfAttributes = {
                 {"", "[command] - Print all commands or help about [command]"},
                 {"", "- Clear screen of MyConsole"},
                 {"", "- Exit from this program"},
-                {"", "-[attributes] - Print files/folders from the current directory",
-                        "l", "- as list without attributes"},
+                {"", "[attributes] - Print files/folders from the current directory" +
+                        NL + NL + "   (by default as list of names (without any differences between files and folders)" +
+                        "-t", "- as a table name, type, size, creation time",
+                        "-r", "- as tree of files (only names)"+
+                        NL + NL + "   (Do not use -t and -r at the same time!)",
+                        "-p [path]", "- print files/folders from the path"},
                 {"", "[path] - Change directory (supports absolute and relative paths)" +
                         NL + NL + "   You can use \" \" if the path contains space or any other special characters" +
                         NL + NL + "   Start absolute path from '<DiskName>:' on Windows +" +
                         NL + NL + "   (or with '/' on other systems)" +
                         NL + NL + "   Start relative path from '.' or '..'"},
+                {"", "<height> <width> - create the structure of geksagonal cells with such parameters"},
+                {"", "- print created structure of geksagonal cells (if it was created)" +
+                        NL + NL + "   EXPERIMENTAL FUNCTION - works well with small fields"},
+                {"", "<x1> <y1> <x2> <y2> - find and print minimum path in created structure of geksagonal cells" +
+                        NL + NL + "   (if it was created)" +
+                        NL + NL + "   x - 'column' in the field, y - 'row' in the field" +
+                        NL + NL + "   x1, y1 - coordinates of the beginning cell of the path" +
+                        NL + NL + "   x2, y2 - coordinates of the final cell of the path"}
 
         };
 
@@ -124,16 +137,16 @@ public class MyConsole {
                         }
                     }
 
-                // parse cls __________________________________________________________________________________________
+                    // parse cls __________________________________________________________________________________________
                 } else if (tokens[0].equals("cls")) {
                     clrscr();
                     c.printf(NL + WELCOME_TEXT);
 
-                // parse exit __________________________________________________________________________________________
+                    // parse exit __________________________________________________________________________________________
                 } else if (tokens[0].equals("exit")) {
                     break;
 
-                // parse cd __________________________________________________________________________________________
+                    // parse cd ____________________________________________________________________________________________
                 } else if (tokens[0].equals("cd")) {
                     Path testPath;
                     if (tokens.length > 1) {
@@ -142,7 +155,28 @@ public class MyConsole {
                             tempPath = testPath;
                         }
                     }
+                } else if (tokens[0].equals("dir")) {
+                    List<String> tmpTokens = Arrays.asList(tokens);
+                    ATTRIBUTES view = ATTRIBUTES.LIST;
+
+                    if (tmpTokens.contains("-r")) view = ATTRIBUTES.TREE;
+                    if (tmpTokens.contains("-t")) view = ATTRIBUTES.TABLE;
+
+                    if (!tmpTokens.contains("-p")) {
+                        PrintFiles(tempPath.toString(), c, view);
+                    } else {
+                        Integer index = tmpTokens.indexOf("-p");
+                        if (index < tmpTokens.size()-1) {
+                            PrintFiles(tmpTokens.get(index+1), c, view);
+                        } else {
+                            c.printf("Try to add your path after -p");
+                        }
+                    }
                 }
+                // parse Geks functions ________________________________________________________________________________
+
+
+
             } else {
                 c.printf(NL + "Unknown command! Commands: " + NL);
                 for (Map.Entry<String, Map<String, String>> entry : COMMANDS.entrySet()) {

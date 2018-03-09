@@ -50,7 +50,7 @@ public class GeksField {
         return field[y][x];
     }
 
-    ArrayList<Geks> minPath(Geks start, Geks end) {
+    private ArrayList<Geks> minPath(Geks start, Geks end) {
         ArrayList<Geks> path = new ArrayList<>();
         if (field.length < 1 || field[0].length < 1) return path;
         if (start == null || start.getLinks() == null) return path;
@@ -118,7 +118,7 @@ public class GeksField {
                 if (i % 2 == 1) {
                     for (int j = 0; j < field[0].length; j++) {
                         if (j < field[0].length - 1) {
-                            System.out.print("  \\ / ");
+                            System.out.print("   \\  / ");
                         } else {
                             System.out.print("   \\");
                         }
@@ -127,16 +127,16 @@ public class GeksField {
                 } else {
                     for (int j = 0; j < field[0].length; j++) {
                         if (j > 0) {
-                            System.out.print("\\ /   ");
+                            System.out.print(" \\    / ");
                         } else {
-                            System.out.print(" /   ");
+                            System.out.print("  /   ");
                         }
                     }
                     System.out.println("");
                 }
             }
             for (int j = 0; j < field[0].length; j++) {
-                System.out.print(field[i][j].getY()+","+field[i][j].getX());
+                System.out.printf("%1$2s,%2$-2s",field[i][j].getY(),field[i][j].getX());
                 if (j < field[0].length-1) System.out.print(" - ");
             }
             System.out.println("");
@@ -183,12 +183,10 @@ public class GeksField {
         node.setLinks(links);
     }
 
-    public static void main(String[] args){
-        GeksField myField = new GeksField(15,15);
-        myField.printField();
-        Geks start = myField.getGeks(0,0);
-        Geks end = myField.getGeks(11,8);
-        ArrayList<Geks> path = myField.minPath(start, end);
+    public void minPath(int firstX, int firstY, int secondX, int secondY) {
+        Geks start = this.getGeks(firstY,firstX);
+        Geks end = this.getGeks(secondY,secondX);
+        ArrayList<Geks> path = this.minPath(start, end);
         System.out.print("\nPath from: ["+start.getY()+","+start.getX()+"]");
         System.out.print(" to: ["+end.getY()+","+end.getX()+"]\n");
         if (path.size() == 0) {
@@ -199,5 +197,10 @@ public class GeksField {
                 System.out.print("[" + v.getY() + "," + v.getX() + "] ");
             }
         }
+    }
+    public static void main(String[] args){
+        //GeksField myField = new GeksField(1000,1000);
+        //myField.printField();
+        //myField.minPath(0,0,10,10);
     }
 }

@@ -12,7 +12,7 @@ public class Solution {
         
         Random rd = new Random();
         int numTests = 5;
-        String[] answers = {}
+        String[] answers = {};
         System.out.println(numTests);
         ArrayList<Integer> N = new ArrayList<>();
         for (int i=0; i<numTests; i++) {
