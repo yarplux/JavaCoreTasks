@@ -1,8 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: commons-io-2.6.jar commons-io-2.6-tests.jar commons-io-2.6
- -javadoc.jar commons-io-2.6-sources.jar commons-io-2.6-test-sources.j
- ar commons-lang3-3.7.jar commons-lang3-3.7-tests.jar commons-lang3-3.
- 7-javadoc.jar commons-lang3-3.7-sources.jar commons-lang3-3.7-test-so
- urces.jar
-Main-Class: Hometasks.task180212.MyConsole
-
