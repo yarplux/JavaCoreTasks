@@ -8,35 +8,35 @@ import java.util.*;
 import Hometasks.task180126.GeksField;
 
 import static Hometasks.task180212.FileOperations.*;
+import static Hometasks.task180212.ArchOperations.*;
 
 public class MyConsole {
 
     static final String NL = System.lineSeparator();
+    static final Console c = System.console();
 
     /*
     HashMap - define commands, their attributes and help for them.
     "key" - commands
     "value" - HashMap of attributes and their description
-
-    TO DO: reorganize it to an xml file
      */
 
-    private static final Map<String, Map<String, String>> COMMANDS = new HashMap<>();
+    private static final Map<String, Map<String, String>> COMMANDS = new TreeMap<>();
 
     static {
-        String[] tempArrayOfCommands = {"help", "cls", "exit", "dir", "cd", "createGeksField", "printGeksFiels", "findMinPath"};
+        String[] tempArrayOfCommands = {"help", "cls", "exit", "dir", "cd", "createGeksField", "printGeksFiels", "findMinPath", "zip", "unzip"};
         String[][] tempArrayOfAttributes = {
                 {"", "[command] - Print all commands or help about [command]"},
                 {"", "- Clear screen of MyConsole"},
                 {"", "- Exit from this program"},
-                {"", "[attributes] - Print files/folders from the current directory" +
-                        NL + NL + "   (by default as list of names (without any differences between files and folders)" +
+                {"", "[-r/-t] [-p <path>]- Print files/folders from the current directory" +
+                        NL + NL + "   (by default as list of names (without any differences between files and folders)",
                         "-t", "- as a table name, type, size, creation time",
-                        "-r", "- as tree of files (only names)"+
+                        "-r", "- as tree of files (only names)" +
                         NL + NL + "   (Do not use -t and -r at the same time!)",
-                        "-p [path]", "- print files/folders from the path"},
-                {"", "[path] - Change directory (supports absolute and relative paths)" +
-                        NL + NL + "   You can use \" \" if the path contains space or any other special characters" +
+                        "-p", "[path] - print files/folders from the path"},
+                {"", "[path] - Change directory (supports absolute and relative paths)",
+                        "path", "- You can use \" \" if the path contains space or any other special characters" +
                         NL + NL + "   Start absolute path from '<DiskName>:' on Windows +" +
                         NL + NL + "   (or with '/' on other systems)" +
                         NL + NL + "   Start relative path from '.' or '..'"},
@@ -47,7 +47,13 @@ public class MyConsole {
                         NL + NL + "   (if it was created)" +
                         NL + NL + "   x - 'column' in the field, y - 'row' in the field" +
                         NL + NL + "   x1, y1 - coordinates of the beginning cell of the path" +
-                        NL + NL + "   x2, y2 - coordinates of the final cell of the path"}
+                        NL + NL + "   x2, y2 - coordinates of the final cell of the path"},
+                {"", "-f <filename of archive> -s <folder to archive>" +
+                        NL + NL + "   creates zip archive with <filename of archive> in the current folder" +
+                        NL + NL + "   do not use spaces in the filename!"},
+                {"", "-a <filename of archive> -t <folder>" +
+                        NL + NL + "   unzip <filename of archive> in the <folder> or in current folder" +
+                        NL + NL + "   do not use spaces in the filename!"},
 
         };
 
@@ -60,128 +66,150 @@ public class MyConsole {
         }
     }
 
-    private static final String WELCOME_TEXT = "" +
-            NL + "Welcome to the MyConsole program!" + NL + NL;
+    private static final String WELCOME_TEXT = "" + NL + "Welcome to the MyConsole program!" + NL + NL;
 
-    static void clrscr() {
+    private static void clrscr() {
+        String error = "";
         if (System.getProperty("os.name").contains("Windows")) {
             ProcessBuilder cls = new ProcessBuilder("cmd", "/c", "cls");
             cls.inheritIO();
-
             try {
                 cls.start().waitFor();
             } catch (InterruptedException | IOException e) {
-                System.out.println(NL + NL + "You have a problem with clear screen on your Windows system!" + NL);
-                e.printStackTrace();
-                System.out.println(NL);
+                error += NL + NL + "You have a problem with clear screen on your Windows system!" + NL + e.getMessage() + NL;
             }
         } else {
             try {
                 Runtime.getRuntime().exec("clear");
             } catch (IOException e) {
-                System.out.println(NL + NL + "You have a problem with clear screen on your non-Windows system!" + NL);
-                e.printStackTrace();
-                System.out.println(NL);
+                error += NL + NL + "You have a problem with clear screen on your non-Windows system!" + NL + e.getMessage() + NL;
+            }
+        }
+        System.out.println(error);
+    }
+
+    static void help(String command) {
+
+        command = (COMMANDS.containsKey(command)) ? command : "";
+        for (Map.Entry<String, Map<String, String>> commandEntry : COMMANDS.entrySet()) {
+            if (command.equals("") || commandEntry.getKey().equals(command)) {
+                for (Map.Entry<String, String> attributeEntry : commandEntry.getValue().entrySet()) {
+                    if (attributeEntry.getKey().equals("")) {
+                        c.printf(NL + NL + commandEntry.getKey() + " " + attributeEntry.getValue());
+                    } else {
+                        c.printf(NL + NL + "   " + attributeEntry.getKey() + " " + attributeEntry.getValue());
+                    }
+                }
             }
         }
     }
 
     public static void main(String[] args) {
 
-        Console c = System.console();
         if (c == null) {
             System.out.println("Can't get access to the system console" + NL + "Finishing...");
             return;
         }
 
-        clrscr();
         c.printf(WELCOME_TEXT);
         c.printf("Commands: " + NL);
-        for (Map.Entry<String, Map<String, String>> entry : COMMANDS.entrySet()) {
-            c.printf(entry.getKey() + " ");
-        }
+        for (Map.Entry<String, Map<String, String>> entry : COMMANDS.entrySet()) System.out.println(entry.getKey());
 
         Path tempPath = Paths.get(System.getProperty("user.dir"));
+        exit:
         while (true) {
 
             c.flush();
             String command = c.readLine(NL + NL + tempPath.toString() + " > ");
-            String[] tokens = command.split("[ ]+");
+            List<String> tokens = Arrays.asList(command.split("[ ]+"));
 
-            if (tokens.length > 0 && COMMANDS.containsKey(tokens[0])) {
-
-                // parse help __________________________________________________________________________________________
-                if (tokens[0].equals("help")) {
-                    if (tokens.length == 1) {
-                        for (Map.Entry<String, Map<String, String>> commandEntry : COMMANDS.entrySet()) {
-                            for (Map.Entry<String, String> attributeEntry : commandEntry.getValue().entrySet()) {
-                                if (attributeEntry.getKey().equals("")) {
-                                    c.printf(NL + NL + commandEntry.getKey() + " " + attributeEntry.getValue());
-                                } else {
-                                    c.printf(NL + NL + "   " + attributeEntry.getKey() + " " + attributeEntry.getValue());
-                                }
-                            }
-                        }
-                    } else if (COMMANDS.containsKey(tokens[1])) {
-                        for (Map.Entry<String, String> attributeEntry : COMMANDS.get(tokens[1]).entrySet()) {
-                            if (attributeEntry.getKey().equals("")) {
-                                c.printf(NL + NL + tokens[1] + " " + attributeEntry.getValue());
-                            } else {
-                                c.printf(NL + NL + "   " + attributeEntry.getKey() + " " + attributeEntry.getValue());
-                            }
-                        }
-                    } else {
-                        c.printf(NL + "Use help with commands: " + NL);
-                        for (Map.Entry<String, Map<String, String>> entry : COMMANDS.entrySet()) {
-                            c.printf(entry.getKey() + " ");
-                        }
-                    }
-
-                    // parse cls __________________________________________________________________________________________
-                } else if (tokens[0].equals("cls")) {
-                    clrscr();
-                    c.printf(NL + WELCOME_TEXT);
-
-                    // parse exit __________________________________________________________________________________________
-                } else if (tokens[0].equals("exit")) {
-                    break;
-
-                    // parse cd ____________________________________________________________________________________________
-                } else if (tokens[0].equals("cd")) {
-                    Path testPath;
-                    if (tokens.length > 1) {
-                        testPath = normalizePath(tempPath, command.substring(command.indexOf(tokens[1])), c);
-                        if (testPath != null) {
-                            tempPath = testPath;
-                        }
-                    }
-                } else if (tokens[0].equals("dir")) {
-                    List<String> tmpTokens = Arrays.asList(tokens);
-                    ATTRIBUTES view = ATTRIBUTES.LIST;
-
-                    if (tmpTokens.contains("-r")) view = ATTRIBUTES.TREE;
-                    if (tmpTokens.contains("-t")) view = ATTRIBUTES.TABLE;
-
-                    if (!tmpTokens.contains("-p")) {
-                        PrintFiles(tempPath.toString(), c, view);
-                    } else {
-                        Integer index = tmpTokens.indexOf("-p");
-                        if (index < tmpTokens.size()-1) {
-                            PrintFiles(tmpTokens.get(index+1), c, view);
+            if (tokens.size() > 0 && COMMANDS.containsKey(tokens.get(0))) {
+                Integer index;
+                switch (tokens.get(0)) {
+                    case "help":
+                        if (tokens.size() == 1) {
+                            command = "";
                         } else {
-                            c.printf("Try to add your path after -p");
+                            command = tokens.get(1);
                         }
+                        help(command);
+                        break;
+                    case "cls":
+                        clrscr();
+                        System.out.println(WELCOME_TEXT);
+                        break;
+                    case "exit":
+                        break exit;
+                    case "cd":
+                        if (tokens.size() > 1) {
+                            Path testPath = normalizePath(tempPath, command.substring(command.indexOf(tokens.get(1))), true);
+                            if (testPath != null) {
+                                tempPath = testPath;
+                            }
+                        }
+                        break;
+                    case "dir":
+                        ATTRIBUTES view = ATTRIBUTES.LIST;
+                        if (tokens.contains("-r")) view = ATTRIBUTES.TREE;
+                        if (tokens.contains("-t")) view = ATTRIBUTES.TABLE;
+                        if (tokens.contains("-p")) {
+                            index = tokens.indexOf("-p");
+                            if (index < tokens.size() - 1) {
+                                printFiles(command.substring(command.indexOf(tokens.get(index + 1))), c, view);
+                            } else {
+                                System.out.println("Try to add your path after -p");
+                            }
+                        } else {
+                            printFiles(tempPath.toString(), c, view);
+                        }
+                        break;
+                    case "zip": {
+                        String archiveName = null;
+                        if (tokens.contains("-f")) {
+                            index = tokens.indexOf("-f");
+                            if (index < tokens.size() - 1) {
+                                archiveName = tokens.get(index + 1);
+                            } else {
+                                System.out.println("Try to add a filename after -f");
+                                break;
+                            }
+                        }
+
+                        index = tokens.indexOf("-p");
+                        String target = null;
+                        if (index < tokens.size() - 1) {
+                            target = tokens.get(index + 1);
+                        } else {
+                            System.out.println("Try to add a path after -p");
+                            break;
+                        }
+                        if (archiveName != null && target != null)
+                            zipCompress(tempPath.toString(), archiveName, target);
+                    }
+                    break;
+                    case "unzip": {
+                        index = tokens.indexOf("-f");
+                        String archiveName;
+                        if (index < tokens.size() - 1) {
+                            archiveName = tokens.get(index + 1);
+                        } else {
+                            System.out.println("Try to add a filename after -f");
+                            break;
+                        }
+
+                        index = tokens.indexOf("-p");
+                        String target;
+                        if (index < tokens.size() - 1) {
+                            target = tokens.get(index + 1);
+                        } else {
+                            System.out.println("Try to add a path after -p");
+                            break;
+                        }
+                        zipCompress(tempPath.toString(), archiveName, target);
                     }
                 }
-                // parse Geks functions ________________________________________________________________________________
-
-
-
             } else {
-                c.printf(NL + "Unknown command! Commands: " + NL);
-                for (Map.Entry<String, Map<String, String>> entry : COMMANDS.entrySet()) {
-                    c.printf(entry.getKey() + " ");
-                }
+                System.out.println(NL + "Unknown command! Use help" + NL);
             }
         }
         System.out.println(NL + NL + "Finishing...");

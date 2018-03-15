@@ -5,10 +5,8 @@ import java.util.*;
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.logging.SimpleFormatter;
 
 import org.apache.commons.io.FileUtils;
-
 
 import static java.nio.file.FileVisitResult.*;
 import static Hometasks.task180212.MyConsole.*;
@@ -72,7 +70,7 @@ public class FileOperations {
                 return null;
             }
 
-            Path testPath = normalizePath(null, root, console);
+            Path testPath = normalizePath(null, root, true);
             if (testPath == null) return null;
 
 
@@ -83,7 +81,7 @@ public class FileOperations {
             ProcessFiles out = Create(operation, attributes, console, root);
             if (out == null) return null;
 
-            out.currentDestination = normalizePath(null, destination, console);
+            out.currentDestination = normalizePath(null, destination, true);
             if (out.currentDestination == null) return null;
 
             return out;
@@ -216,9 +214,9 @@ public class FileOperations {
         }
     }
 
-    static void PrintFiles(String path, Console c, ATTRIBUTES view) {
+    static void printFiles(String path, Console c, ATTRIBUTES view) {
 
-        Path tmpPath = normalizePath(null, path, c);
+        Path tmpPath = normalizePath(null, path, true);
         if (tmpPath == null) return;
 
         if (c == null) {
@@ -247,7 +245,7 @@ public class FileOperations {
         }
     }
 
-    static Path normalizePath(Path current, String testPath, Console c) {
+    static Path normalizePath(Path current, String testPath, boolean mustBeDirectory) {
 
         File path;
         Path out = null;
@@ -284,7 +282,7 @@ public class FileOperations {
             }
             try {
                 path = new File(path.getCanonicalPath());
-                if (path.isDirectory()) {
+                if (path.isDirectory() || !mustBeDirectory) {
                     out = path.toPath();
                 } else {
                     out = null;
@@ -298,11 +296,7 @@ public class FileOperations {
         }
 
         if (error) {
-            if (c == null) {
-                System.out.println(errorMessage);
-            } else {
-                c.printf(errorMessage);
-            }
+            System.out.println(errorMessage);
         }
         return out;
     }
@@ -358,4 +352,65 @@ public class FileOperations {
         }
 
     }
+
+    static boolean answer(){
+        String command;
+        do {
+            command = c.readLine("Do you want to continue? (y/n) ");
+            switch(command) {
+                case "y":
+                    return true;
+                case "n":
+                    return false;
+                default:
+                    for (int i=0; i<command.length(); i++)
+                        c.format("Answer 'y' or 'n' only please!");
+                    break;
+            }
+        }while (true);
+
+    }
+
+    static boolean remove(String file, boolean force, boolean print){
+        Path path = normalizePath(null, file, false);
+        if (path == null) {
+            if (print) {
+                System.out.println("Your path is wrong!");
+            }
+            return false;
+        }
+
+        try {
+            Files.delete(path);
+        } catch (NoSuchFileException x) {
+            if (print) {
+                System.err.format("%s: no such" + " file or directory" + NL, path);
+            }
+            return false;
+        } catch (DirectoryNotEmptyException x) {
+            if (print) {
+                System.err.format("The directory %s is not empty" + NL, path);
+            }
+            if (force || answer()) {
+                if (path.toFile() == null) {
+                    if (print) {
+                        System.err.format("Something is wrong with the directory %s" + NL, path);
+                    } else {
+                        for (String f : path.toFile().list()) {
+                            remove(f, force, print);
+                        }
+                    }
+                }
+            }
+            return false;
+        } catch (IOException x) {
+            if (print) {
+                System.err.format("File permission problems are caught here: %s" + NL, path);
+                System.err.println(x);
+            }
+            return false;
+        }
+        return true;
+    }
+
 }
